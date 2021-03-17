@@ -28,7 +28,6 @@ export class PlaymapService {
     this.load();
     this.metronome.subscribe( {
       next: () => {
-        // console.log("get");
         const cmd: COMMAND = {cmd: 'GET'};
         this.worker.postMessage(cmd);
       }
