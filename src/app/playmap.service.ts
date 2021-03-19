@@ -107,6 +107,14 @@ export class PlaymapService {
     });
   }
 
+  appendPlanet(P: Planet): void {
+    const G = this.gameSubj.value;
+    this.gameSubj.next({
+      ...G,
+      planets: [...G.planets, P]
+    });
+  }
+
   updatePlanet(P: Planet, u: Partial<Planet>): void {
     const G = this.gameSubj.value;
     this.gameSubj.next({

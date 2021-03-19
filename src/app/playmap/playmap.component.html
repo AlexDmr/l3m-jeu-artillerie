@@ -1,38 +1,56 @@
-<button (click)="load()">LOAD</button>
-<button (click)="start()">START</button>
-<button (click)="stop()">STOP</button>
+<section *ngIf = "gameObs | async as G">
+
+  <section *ngIf = "!G.edition">
+    <button (click)="start()">START</button>
+    <button (click)="stop()">STOP</button>
+    <hr/>
+    <form *ngIf="G.selectedShip as S" (ngSubmit)="updateShipFire(S, {angle: angle.valueAsNumber, force: force.valueAsNumber})">
+      <pre>
+        Angle <input type="number" [ngModel]="S.angle" name="angle" #angle />
+        Force <input type="number" [ngModel]="S.force" name="force" #force />
+        <button (click)="selectedShipUIDSubj.next(-1)">Annuler</button> <input type="submit" value="Valider" />
+      </pre>
+    </form>
+  </section>
+  <section *ngIf = "G.edition">
+    <button (click)="load()">LOAD</button>
+    <button (click) = "mode.next('Move')" >Move</button>
+    <button (click) = "mode.next('AddPlanet')" >Add planet</button>
+    {{ G.mode }}
+    move {{G.edition && G.mode !== 'Move'}}
+  </section>
 
 
-<svg *ngIf="gameObs | async as G" #svgE>
-  <g #root transform="translate(400 300) scale(0.5)" [appSvgDraggable]="svgE" [appSvgZoomable]="svgE">
-    <circle *ngFor="let P of G.planets; trackBy: trackByUID"
-            class="planet" #circle
-            [appSvgDraggable] = "true" (svgDragEnd) = "endDragPlanet(P, circle, $event)"
-            [attr.cx]="P.p[0]" [attr.cy]="P.p[1]" [attr.r]="P.radius" />
-    <g *ngFor="let player of G.players; trackBy: trackByIndex">
-      <circle *ngFor="let S of player.ships; trackBy: trackByUID"
-              [attr.cx]="S.p[0]" [attr.cy]="S.p[1]" [attr.r]="S.radius"
-              [attr.fill] = "player.color"
-              class="ship"
-              [class.selected] = "isSelected(S)"
-              (click) = "selectedShipUIDSubj.next(S.uid)"
-              />
+  <svg #svgE>
+    <g #root transform="translate(200 150)" [appSvgDraggable]="(G.edition && G.mode !== 'Move') ? false : svgE" [appSvgZoomable]="svgE">
+      <circle *ngFor="let P of G.planets; trackBy: trackByUID"
+              class="planet" #circle
+              [appSvgDraggable] = "G.edition" (svgDragEnd) = "endDragPlanet(P, circle, $event)"
+              [attr.cx]="P.p[0]" [attr.cy]="P.p[1]" [attr.r]="P.radius" />
+      <g *ngFor="let player of G.players; trackBy: trackByIndex">
+        <circle *ngFor="let S of player.ships; trackBy: trackByUID"
+                [attr.cx]="S.p[0]" [attr.cy]="S.p[1]" [attr.r]="S.radius"
+                [attr.fill] = "player.color"
+                class="ship"
+                [class.selected] = "isSelected(S)"
+                (click) = "selectedShipUIDSubj.next(S.uid)"
+                />
+      </g>
+      <polyline *ngFor="let pts of trajectoriesObs | async; index as i"
+                fill="none" [attr.stroke]="colors[i]"
+                [attr.points]="pts"
+                />
+
+      <circle *ngIf="newPlanetSubj | async as P"
+              [attr.cx] = "P.p[0]"
+              [attr.cy] = "P.p[1]"
+              [attr.r]  = "P.radius"
+              fill      = "black"
+              stroke    = "red"
+      ></circle>
     </g>
-    <polyline *ngFor="let pts of trajectoriesObs | async; index as i"
-              fill="none" [attr.stroke]="colors[i]"
-              [attr.points]="pts"
-              />
-  </g>
-</svg>
+  </svg>
 
-<form *ngIf="selectedShipObs | async as S" (ngSubmit)="updateShipFire(S, {angle: angle.valueAsNumber, force: force.valueAsNumber})">
-  <pre>
-    Angle <input type="number" [ngModel]="S.angle" name="angle" #angle />
-    Force <input type="number" [ngModel]="S.force" name="force" #force />
-    <button (click)="selectedShipUIDSubj.next(-1)">Annuler</button> <input type="submit" value="Valider" />
-  </pre>
-</form>
+</section>
 
-<pre>
-  {{selectedShipObs | async | json}}
-</pre>
+

@@ -19,7 +19,15 @@ function getCoord(e: SVGGraphicsElement, x: number, y: number): [ x: number, y: 
   selector: '[appSvgDraggable]'
 })
 export class SvgDraggableDirective implements OnInit, OnDestroy {
-  @Input () appSvgDraggable: boolean | Element = true;
+  private pAppSvgDraggable: boolean | Element = true;
+  @Input ()
+  get appSvgDraggable(): boolean | Element {return this.pAppSvgDraggable;}
+  set appSvgDraggable(v: boolean | Element) {
+    this.pAppSvgDraggable = v;
+    this.sub?.unsubscribe();
+    this.ngOnInit();
+  }
+
   @Output() svgDragEnd = new EventEmitter<DOMMatrix>();
 
   private sub: Subscription | undefined = undefined;

@@ -1,12 +1,22 @@
 import { AfterViewInit, OnInit } from '@angular/core';
 import { Directive, ElementRef, Input, OnDestroy } from '@angular/core';
 import { fromEvent, Subscription } from 'rxjs';
+import { getCoordFromEvent } from './utils';
 
 @Directive({
   selector: '[appSvgZoomable]'
 })
 export class SvgZoomableDirective implements OnInit, OnDestroy, AfterViewInit {
-  @Input () appSvgZoomable: boolean | Element = true;
+  // @Input () appSvgZoomable: boolean | Element = true;
+  private pAppSvgZoomable: boolean | Element = true;
+  @Input ()
+  get appSvgZoomable(): boolean | Element {return this.pAppSvgZoomable;}
+  set appSvgZoomable(v: boolean | Element) {
+    this.pAppSvgZoomable = v;
+    this.sub?.unsubscribe();
+    this.ngOnInit();
+  }
+
   private sub: Subscription | undefined = undefined;
   private svg: Element | null = null;
 
@@ -43,14 +53,7 @@ export class SvgZoomableDirective implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private getCoordFromEvent(evt: WheelEvent): [number, number] {
-    const box = this.svg?.getBoundingClientRect() as DOMRect;
-    const M = this.el.nativeElement.getCTM();
-    // console.log(box, this.svg);
-    const pt = (new DOMPoint(
-      evt.pageX + window.scrollX - box.x,
-      evt.pageY + window.scrollY - box.y
-    ) ).matrixTransform( M?.inverse() );
-    return [pt.x, pt.y];
+    return getCoordFromEvent(evt, this.svg as Element, this.el.nativeElement);
   }
 
 }
